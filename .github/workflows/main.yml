@@ -1,0 +1,39 @@
+name: Self-hosted runner test for secrets injection
+
+on:
+
+  push:
+
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: self-hosted
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::xxxxxxxxxxxx:role/SecretManagerReadOnlyEC2Role
+          aws-region: ap-south-1
+          role-session-name: github-runner-session-1
+
+
+      - name: Read secrets from AWS Secrets Manager into environment variables
+        uses: abhilash1in/aws-secrets-manager-action@v2.1.0
+        with:
+          secrets: apicreds
+          parse-json: true
+
+        #Optional Steps
+
+      - name: Check if env variable is set after fetching secrets
+        run: |
+          if [ -z ${APICREDS_URL+x} ]; then echo "APICREDS_URL is unset"; else echo "APICREDS_URL is set to '$APICREDS_URL'"; fi
+          if [ -z ${APICREDS_KEY+x} ]; then echo "APICREDS_KEY is unset"; else echo "APICREDS_KEY is set to '$APICREDS_KEY'"; fi
+          if [ -z ${APICREDS_SECRET+x} ]; then echo "APICREDS_SECRET is unset"; else echo "APICREDS_SECRET is set to '$APICREDS_SECRET'"; fi
